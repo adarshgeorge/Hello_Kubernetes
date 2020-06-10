@@ -101,3 +101,14 @@ One final step on the master node is to install Flannel. Run the following comma
 ```
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
+
+Check the status
+
+```
+[root@master ~]# kubectl get nodes
+NAME                     STATUS   ROLES    AGE     VERSION
+master.adamzgeorge.com   Ready    master   3h54m   v1.18.2
+node1.adamzgeorge.com    Ready    <none>   11m     v1.18.2
+node2.adamzgeorge.com    Ready    <none>   4m      v1.18.2
+[root@master ~]#
+```

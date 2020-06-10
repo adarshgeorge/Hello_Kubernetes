@@ -1,0 +1,33 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata: 
+  name: kubedockerweb-deployment
+spec: 
+  selector: 
+    matchLabels:
+      app: kubedockerweb
+  replicas: 2
+  template: 
+    metadata: 
+      labels: 
+        app: kubedockerweb
+    spec: 
+      containers: 
+      - name: kubedockerweb
+        image: adarshgeorge999/kubedockerweb:latest
+        ports: 
+        - containerPort: 80
+---
+kind: Service
+apiVersion: v1
+metadata: 
+  name: kubedockerweb-service
+spec: 
+  selector: 
+    app: kubedockerweb
+  ports: 
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 31000
+  type: NodePort

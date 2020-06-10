@@ -1,0 +1,115 @@
+
+
+hostname: master.adamzgeorge.com
+hostnamectl set-hostname master.adamzgeorge.com
+
+node1: wnode1.adamzgeorge.com
+
+hostnamectl set-hostname wnode1.adamzgeorge.com
+
+199.127.62.9 master.adamzgeorge.com
+209.222.97.40 wnode1.adamzgeorge.com
+
+On master
+
+hostnamectl set-hostname master.adamzgeorge.com
+
+vi /etc/hosts
+
+199.127.62.154 master.adamzgeorge.com
+172.93.111.122 wnode1.adamzgeorge.com
+
+
+
+
+#!/bin/bash
+swapoff -a
+yum install iptables-services.x86_64 -y
+systemctl stop firewalld.service
+systemctl disable firewalld.service
+systemctl mask firewalld.service
+systemctl start iptables
+systemctl enable iptables
+systemctl unmask iptables
+iptables -F
+service iptables save
+
+yum install docker -y
+systemctl enable docker && systemctl start docker
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+exclude=kube*
+EOF
+
+
+yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+systemctl enable kubelet && systemctl start kubelet
+
+cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+
+
+kubeadm init --apiserver-advertise-address=199.127.62.9 --pod-network-cidr=10.244.0.0/16 
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Checking acive node
+# kubectl get nodes
+NAME                     STATUS     ROLES    AGE     VERSION
+master.adamzgeorge.com   NotReady   master   11m     v1.18.2
+wnode1.adamzgeorge.com   NotReady   <none>   4m20s   v1.18.2
+[root@master ~]#
+
+The status is not ready
+
+Now join the WorkerNode
+
+
+kubeadm join 199.127.62.154:6443 --token 3736vd.wx1o4n8ivoyhm7bn \
+    --discovery-token-ca-cert-hash sha256:11759fbeab2dcd53fd0096a7bfe5255696e7978f41603b502809af9c2f3aa36e
+
+
+One final step on the master node is to install Flannel. Run the following command.
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+
+Now check the node status
+
+[root@master ~]# kubectl get nodes
+NAME                     STATUS   ROLES    AGE     VERSION
+master.adamzgeorge.com   Ready    master   14m     v1.18.2
+wnode1.adamzgeorge.com   Ready    <none>   7m16s   v1.18.2
+[root@master ~]#
+
+
+Now create a hellow App
+
+kubectl apply -f yaml/hello-kubernetes.yaml 
+
+
+# kubectl get po
+NAME                                READY   STATUS    RESTARTS   AGE
+hello-kubernetes-594f6f475f-9xm9r   1/1     Running   0          4m31s
+hello-kubernetes-594f6f475f-sgcbs   1/1     Running   0          4m31s
+hello-kubernetes-594f6f475f-sggbs   1/1     Running   0          4m31s
+
+# kubectl get rc,services
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/hello-kubernetes   LoadBalancer   10.110.69.125   <pending>     80:31300/TCP   20m
+service/kubernetes         ClusterIP      10.96.0.1       <none>        443/TCP        42m
+[root@master ~]#
+
+Then visit serverIP:31300
