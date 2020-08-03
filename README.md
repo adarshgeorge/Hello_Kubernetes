@@ -1,3 +1,8 @@
+## DevOps Project in Kubernetes
+
+**OutPut**
+
+![alt HelloWorld](https://github.com/adarshgeorge/Hello_Kubernetes/blob/master/web/cover.png)
 
 **Kubernetes Initial Setup for Master server and Worker Node**
 
