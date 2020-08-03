@@ -2,7 +2,7 @@
 
 **OutPut**
 
-![alt HelloWorld](https://github.com/adarshgeorge/Hello_Kubernetes/blob/master/web/cover.png)
+![alt HelloWorld](https://raw.githubusercontent.com/adarshgeorge/Hello_Kubernetes/master/web/cover.png)
 
 **Kubernetes Initial Setup for Master server and Worker Node**
 
